@@ -3,6 +3,7 @@ var bodyParser = require('body-parser');
 var passport = require('passport');
 var authJwtController = require('./auth_jwt');
 var User = require('./Users');
+var Movie = require('./Movies');
 var jwt = require('jsonwebtoken');
 
 var app = express();
@@ -94,6 +95,87 @@ router.post('/signin', function(req, res) {
 
     });
 });
+
+router.route('/movies')
+    .post(authJwtController.isAuthenticated, function (req, res) {
+        if (!req.body.title || !req.body.year || !req.body.genre || !req.body.actors ||
+            !req.body.actors[0].actorname || !req.body.actors[1].actorname || !req.body.actors[2].actorname ||
+            !req.body.actors[0].charactername || !req.body.actors[1].charactername || !req.body.actors[2].charactername) {
+            res.status(403).json({success: false, message: 'Invalid movie format.'});
+        }
+        else {
+            var movie = new Movie();
+            movie.title = req.body.title;
+            movie.year = req.body.year;
+            movie.genre = req.body.genre;
+            movie.actors = req.body.actors;
+            movie.save(function(err) {
+                if (err) {
+                    if (err.code === 11000) {
+                        return res.status(403).json({
+                            success: false, message: 'A movie with that title already exists. '
+                        });
+                    }
+                    else {
+                        return res.status(403).send(err);
+                    }
+                }
+                res.status(200).send({ success: true, message: "added movie" });
+            });
+        }
+    })
+    .get(authJwtController.isAuthenticated, function (req, res) {
+        if (!req.body) {
+            res.status(403).json({ success: false, message: "empty query" });
+        }
+        else {
+            Movie.find(req.body).select("title year genre actors").exec(function(err, movie) {
+                if (err) res.send(err);
+
+                if (movie && movie.length > 0) {
+                    return res.status(200).json({ success: true,
+                        result: movie });
+                }
+                else {
+                    return res.status(404).json({ success: false, message: "movie not found" });
+                }
+            });
+        }
+    })
+    .put(authJwtController.isAuthenticated, function (req, res) {
+        if (!req.body || !req.body.findby || !req.body.updateto) {
+            res.status(403).json({ success: false, message: "empty body"});
+        }
+        else {
+            console.log("findby: " + JSON.stringify(req.body.findby));
+            console.log("updateto: " + JSON.stringify(req.body.updateto));
+            Movie.updateMany(req.body.findby, req.body.updateto, function (err, doc) {
+                console.log(JSON.stringify(doc));
+                if (err) res.status(403).json({ success: false, message: "failed to update movie" });
+                else if (doc.n === 0)
+                    res.status(403).json({ success: false, message: "did not find movies to update" });
+                else if (doc.nModified === 0) {
+                    res.status(403).json({ success: false, message: "nothing changed"});
+                }
+                else {
+                    return res.status(200).send({success: true, message: "successfully updated movie"});
+                }
+            })
+        }
+    })
+    .delete(authJwtController.isAuthenticated, function(req, res) {
+        if (!req.body) {
+            res.status(403).json({ success: false, message: "empty body"});
+        }
+        else {
+            Movie.deleteOne(req.body, function(err, doc) {
+                console.log(JSON.stringify(doc));
+                if (err) res.status(403).json({ success: false, message: "failed to delete" });
+                else if (doc.n === 0) res.status(403).json({ success: false, message: "did not find records to delete" });
+                else res.status(200).json({ success: true, message: "successfully deleted", numberDeleted: doc.n });
+            })
+        }
+    });
 
 app.use('/', router);
 app.listen(process.env.PORT || 8080);
