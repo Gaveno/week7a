@@ -1,1 +1,2 @@
-# week7a
+# HW3
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/1e09a5be02703b012d08#?env%5BCSCI3916_HW3%5D=W3sidmFsdWUiOiJKV1QgZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnBaQ0k2SWpWak9HVTJNV013TnpsbU5EYzJNREF3TkRsak5qWTRZU0lzSW5WelpYSnVZVzFsSWpvaVVtOTBkR0Z5YlNJc0ltbGhkQ0k2TVRVMU1qZ3pOemd3TTMwLk5XY1drdTNVdGtqVHYzRERoWUlFWE43bWpYQ0VqbGJ0ZFBZeUFEalFsNTAiLCJrZXkiOiJzaWduaW5fdG9rZW4iLCJlbmFibGVkIjp0cnVlfV0=)
