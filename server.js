@@ -80,19 +80,20 @@ router.post('/signin', function(req, res) {
 
     User.findOne({ username: userNew.username }).select('name username password').exec(function(err, user) {
         if (err) res.send(err);
-
-        user.comparePassword(userNew.password, function(isMatch){
-            if (isMatch) {
-                var userToken = {id: user._id, username: user.username};
-                var token = jwt.sign(userToken, process.env.SECRET_KEY);
-                res.json({success: true, token: 'JWT ' + token});
-            }
-            else {
-                res.status(401).send({success: false, message: 'Authentication failed.'});
-            }
-        });
-
-
+        if (user) {
+            user.comparePassword(userNew.password, function (isMatch) {
+                if (isMatch) {
+                    var userToken = {id: user._id, username: user.username};
+                    var token = jwt.sign(userToken, process.env.SECRET_KEY);
+                    res.json({success: true, token: 'JWT ' + token});
+                } else {
+                    res.status(401).send({success: false, message: 'Authentication failed.'});
+                }
+            });
+        }
+        else {
+            return res.status(403).send({ success: false, message: "User not found." });
+        }
     });
 });
 
@@ -126,7 +127,7 @@ router.route('/movies')
     })
     .get(authJwtController.isAuthenticated, function (req, res) {
         if (!req.body) {
-            res.status(403).json({ success: false, message: "empty query" });
+            res.status(403).json({ success: false, message: "Empty query." });
         }
         else {
             Movie.find(req.body).select("title year genre actors").exec(function(err, movie) {
@@ -137,42 +138,42 @@ router.route('/movies')
                         result: movie });
                 }
                 else {
-                    return res.status(404).json({ success: false, message: "movie not found" });
+                    return res.status(404).json({ success: false, message: "Movie not found." });
                 }
             });
         }
     })
     .put(authJwtController.isAuthenticated, function (req, res) {
         if (!req.body || !req.body.findby || !req.body.updateto) {
-            res.status(403).json({ success: false, message: "empty body"});
+            res.status(403).json({ success: false, message: "Empty body."});
         }
         else {
             console.log("findby: " + JSON.stringify(req.body.findby));
             console.log("updateto: " + JSON.stringify(req.body.updateto));
             Movie.updateMany(req.body.findby, req.body.updateto, function (err, doc) {
                 console.log(JSON.stringify(doc));
-                if (err) res.status(403).json({ success: false, message: "failed to update movie" });
+                if (err) res.status(403).json({ success: false, message: "Failed to update movie." });
                 else if (doc.n === 0)
-                    res.status(403).json({ success: false, message: "did not find movies to update" });
+                    res.status(403).json({ success: false, message: "Did not find movies to update." });
                 else if (doc.nModified === 0) {
-                    res.status(403).json({ success: false, message: "nothing changed"});
+                    res.status(403).json({ success: false, message: "Nothing changed."});
                 }
                 else {
-                    return res.status(200).send({success: true, message: "successfully updated movie"});
+                    return res.status(200).send({success: true, message: "Successfully updated movie."});
                 }
             })
         }
     })
     .delete(authJwtController.isAuthenticated, function(req, res) {
         if (!req.body) {
-            res.status(403).json({ success: false, message: "empty body"});
+            res.status(403).json({ success: false, message: "Empty body."});
         }
         else {
             Movie.deleteOne(req.body, function(err, doc) {
                 console.log(JSON.stringify(doc));
-                if (err) res.status(403).json({ success: false, message: "failed to delete" });
-                else if (doc.n === 0) res.status(403).json({ success: false, message: "did not find records to delete" });
-                else res.status(200).json({ success: true, message: "successfully deleted", numberDeleted: doc.n });
+                if (err) res.status(403).json({ success: false, message: "Failed to delete." });
+                else if (doc.n === 0) res.status(403).json({ success: false, message: "Did not find records to delete." });
+                else res.status(200).json({ success: true, message: "Successfully deleted.", numberDeleted: doc.n });
             })
         }
     });
